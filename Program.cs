@@ -11,10 +11,15 @@ namespace ClipboardUrl
 {
     class Program
     {
+        #region Attributes
         private const int WM_CLIPBOARDUPDATE = 0x031D;
-        private static IntPtr _hwnd;
+        private static readonly IntPtr _hwnd;
         private static NativeWindow _window;
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleOutputCP(uint wCodePageID);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleCP(uint wCodePageID);
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool AddClipboardFormatListener(IntPtr hwnd);
 
@@ -30,9 +35,13 @@ namespace ClipboardUrl
         [DllImport("user32.dll")]
         private static extern bool DestroyWindow(IntPtr hwnd);
 
+        #endregion
+
         [STAThread]
         static void Main(string[] args)
         {
+            SetConsoleOutputCP(65001);
+            SetConsoleCP(65001);
             Console.WriteLine("🕵️‍♂️ Listening for clipboard changes (headless)...");
 
             Application.EnableVisualStyles();
@@ -97,6 +106,7 @@ namespace ClipboardUrl
             }
         }
 
+        #region checkUrlType
         static (bool, bool) IsVideo(string text)
         {
             string url = "https://www.youtube.com/watch";
@@ -107,6 +117,7 @@ namespace ClipboardUrl
         {
             return text.ToLower().Contains("https://www.youtube.com/playlist");
         }
+        #endregion
 
         static void Display(bool isVideo, bool containsList, bool isPlaylist)
         {
