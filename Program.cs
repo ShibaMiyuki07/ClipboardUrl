@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using YoutubeExplode;
+using YoutubeExplode.Common;
 
 namespace ClipboardUrl
 {
@@ -53,6 +55,8 @@ namespace ClipboardUrl
 
         private class MessageOnlyWindow : NativeWindow
         {
+            private readonly YoutubeClient youtubeClient = new YoutubeClient();
+            CancellationTokenSource cts = new CancellationTokenSource();
             public MessageOnlyWindow()
             {
                 CreateParams cp = new CreateParams
@@ -70,17 +74,67 @@ namespace ClipboardUrl
                 this.CreateHandle(cp);
                 AddClipboardFormatListener(this.Handle);
             }
+            static async Task ShowLoadingAsync(string message, CancellationToken token)
+            {
+                char[] spinner = new[] { '|', '/', '-', '\\' };
+                int counter = 0;
 
+                Console.Write(message + " ");
+
+                while (!token.IsCancellationRequested)
+                {
+                    Console.Write(spinner[counter % spinner.Length]);
+                    await Task.Delay(100);
+                    Console.Write("\b");
+                    counter++;
+                }
+
+                Console.WriteLine("✔");
+            }
             protected override void WndProc(ref Message m)
             {
                 if (m.Msg == WM_CLIPBOARDUPDATE)
                 {
                     if (Clipboard.ContainsText())
                     {
+                        Console.WriteLine("Wait until process is finished to copy again");
+                        var loadingTask = ShowLoadingAsync("🔍 Fetching...", cts.Token);
+                        RemoveClipboardFormatListener(this.Handle);
                         string text = Clipboard.GetText();
-                        (bool isVideo, bool containList) = IsVideo(text);
-                        bool isPlaylist = IsPlaylist(text);
-                        Display(isVideo, containList, isPlaylist);
+
+                        /* 
+                            // 0 = none
+                            // 1 = video
+                            // 2 = playlist
+                            // 3 = video with playlist 
+                        */
+                        int urlType = VideoType(text);
+                        Task.Run(async () =>
+                        {
+                            switch (urlType)
+                            {
+                                case 1:
+                                    var video = await youtubeClient.Videos.GetAsync(text);
+                                    cts.Cancel();
+                                    await loadingTask;
+                                    break;
+                                case 2:
+                                    var playlist = await youtubeClient.Playlists.GetVideosAsync(text);
+                                    cts.Cancel();
+                                    await loadingTask;
+                                    break;
+                                case 3:
+                                    cts.Cancel();
+                                    await loadingTask;
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            AddClipboardFormatListener(this.Handle);
+                            Console.WriteLine("Process is finished");
+                        });
+
                     }
                 }
 
@@ -116,6 +170,29 @@ namespace ClipboardUrl
         static bool IsPlaylist(string text)
         {
             return text.ToLower().Contains("https://www.youtube.com/playlist");
+        }
+
+        static int VideoType(string url)
+        {
+            int videoType = 0;
+            (bool isVideo, bool containList) = IsVideo(url);
+            bool isPlaylist = IsPlaylist(url);
+
+            if(isVideo && !containList)
+            {
+                videoType = 1;
+            }
+            else if(!isVideo && containList && isPlaylist)
+            {
+                videoType = 2;
+            }
+            else if(isVideo && containList)
+            {
+                videoType = 3;
+            }
+
+            Display(isVideo, containList, isPlaylist);
+            return videoType;
         }
         #endregion
 
