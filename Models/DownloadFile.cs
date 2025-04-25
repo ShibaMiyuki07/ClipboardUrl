@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,8 +19,13 @@ namespace ClipboardUrl.Models
         public static DownloadFile initializeDownloadFile(Video video)
         {
             DownloadFile downloadFile = new DownloadFile();
-            downloadFile.Title = Regex.Replace(video.Title, @"[^a-zA-Z0-9\s]", "");
+            downloadFile.Title = string.Join("", video.Title.Split(Path.GetInvalidPathChars()));
             downloadFile.Author = video.Author.ChannelTitle;
+            string[] titleSplit = video.Title.Split('-');
+            if (titleSplit.Length > 0) { 
+                downloadFile.Author = titleSplit[0];
+                downloadFile.Title = string.Join("", titleSplit[1].Split(Path.GetInvalidPathChars()));
+            }
             return downloadFile;
         }
     }

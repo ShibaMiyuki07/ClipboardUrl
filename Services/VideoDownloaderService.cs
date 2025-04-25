@@ -12,6 +12,7 @@ using YoutubeExplode.Videos.Streams;
 using ClipboardUrl.Utils;
 using System.IO;
 using System.Threading;
+using Id3;
 
 namespace ClipboardUrl.Services
 {
@@ -36,6 +37,17 @@ namespace ClipboardUrl.Services
                 using (var audioStream = File.Create(fullpath))
                 {
                     await Const.youtubeClient.Videos.Streams.CopyToAsync(audio, audioStream, cancellationToken: token);
+                }
+                using (var mp3 = new Mp3(fullpath,Mp3Permissions.ReadWrite))
+                {
+                    Id3Tag tag = mp3.GetTag(Id3TagFamily.Version2X);
+                    if(tag == null)
+                    {
+                        tag = new Id3Tag();
+                    }
+                    tag.Title = downloadFile.Title;
+                    tag.Publisher = downloadFile.Author;
+                    mp3.WriteTag(tag, WriteConflictAction.Replace);
                 }
             }
             
