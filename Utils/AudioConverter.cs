@@ -32,8 +32,13 @@ namespace ClipboardUrl.Utils
 
         private static string InitializeParameter(string audioFullPath,DownloadFile downloadFile)
         {
+            string coverParameter = string.Empty;
+            if (File.Exists(downloadFile.CoverPath))
+            {
+                coverParameter = $"-i \"{downloadFile.CoverPath}\" -map 0:a -map 1:v -c:v mjpeg -id3v2_version 3";
+            }
             string extensions = audioFullPath.Split('.')[audioFullPath.Split('.').Length - 1];
-            string parameter = $"-i \"{audioFullPath}\" -i \"{downloadFile.CoverPath}\" -map 0:a -map 1:v -c:v mjpeg -id3v2_version 3  -movflags use_metadata_tags -map_metadata 0 -metadata title=\"{(!string.IsNullOrEmpty(downloadFile.Title) ? downloadFile.Title : "")}\" -metadata artist=\"{(downloadFile.Author.Length > 0 ? string.Join(",", downloadFile.Author) : "")}\" \"{audioFullPath.Replace(extensions, "mp3")}\"";
+            string parameter = $"-i \"{audioFullPath}\" {coverParameter}  -movflags use_metadata_tags -map_metadata 0 -metadata title=\"{(!string.IsNullOrEmpty(downloadFile.Title) ? downloadFile.Title : "")}\" -metadata artist=\"{(downloadFile.Author.Length > 0 ? string.Join(",", downloadFile.Author) : "")}\" \"{audioFullPath.Replace(extensions, "mp3")}\"";
             return parameter;
         }
     }

@@ -24,7 +24,13 @@ namespace ClipboardUrl
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetConsoleCP(uint wCodePageID);
-       
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr GetConsoleWindow();
+
+        [DllImport("User32.dll", SetLastError = true)]
+        private static extern bool ShowWindow(IntPtr hWnd,int cmdShow);
+
 
         #endregion
 
@@ -33,6 +39,8 @@ namespace ClipboardUrl
         {
             SetConsoleOutputCP(65001);
             SetConsoleCP(65001);
+            IntPtr hWnd = GetConsoleWindow();
+            ShowWindow(hWnd, 0);
             Console.WriteLine("🕵️‍♂️ Listening for clipboard changes (headless)...");
 
             Application.EnableVisualStyles();

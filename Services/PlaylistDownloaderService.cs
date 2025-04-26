@@ -21,11 +21,10 @@ namespace ClipboardUrl.Utils
             var playlist = await Const.youtubeClient.Playlists.GetAsync(url);
             var playlistVideos = await Const.youtubeClient.Playlists.GetVideosAsync(url);
 
-            var directory = Path.Combine(Const.path, playlist.Title);
+            var directory = Path.Combine(Const.path, string.Join("", playlist.Title.Split(Path.GetInvalidFileNameChars())));
             DirectoryService.CheckDirectory(directory);
 
             await LaunchTheDownload(playlistVideos, directory);
-            
         }
 
         #region Private Method

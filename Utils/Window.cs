@@ -20,7 +20,6 @@ namespace ClipboardUrl.Utils
         CancellationTokenSource cts = new CancellationTokenSource();
 
         private const int WM_CLIPBOARDUPDATE = 0x031D;
-        private static readonly IntPtr _hwnd;
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool AddClipboardFormatListener(IntPtr hwnd);
@@ -112,6 +111,7 @@ namespace ClipboardUrl.Utils
                                     await loadingTask;
                                     break;
                                 case (int)Const.UrlType.VideoWithPlaylist:
+                                    await HandleDownload(new PlaylistDownloaderService(), text);
                                     cts.Cancel();
                                     await loadingTask;
                                     break;
@@ -120,7 +120,7 @@ namespace ClipboardUrl.Utils
                                     break;
                             }
                         }
-                        catch(Exception e)
+                        catch(Exception)
                         {
                             
                         }
