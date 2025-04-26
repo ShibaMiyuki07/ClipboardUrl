@@ -97,28 +97,38 @@ namespace ClipboardUrl.Utils
                     int urlType = VideoType(text);
                     Task.Run(async () =>
                     {
-                        switch (urlType)
+                        try
                         {
-                            case (int)Const.UrlType.Video:
-                                await HandleDownload(new VideoDownloaderService(), text);
-                                cts.Cancel();
-                                await loadingTask;
-                                break;
-                            case (int)Const.UrlType.Playlist:
-                                await HandleDownload(new PlaylistDownloaderService(),text);
-                                cts.Cancel();
-                                await loadingTask;
-                                break;
-                            case (int)Const.UrlType.VideoWithPlaylist:
-                                cts.Cancel();
-                                await loadingTask;
-                                break;
-                            default:
-                                break;
+                            switch (urlType)
+                            {
+                                case (int)Const.UrlType.Video:
+                                    await HandleDownload(new VideoDownloaderService(), text);
+                                    cts.Cancel();
+                                    await loadingTask;
+                                    break;
+                                case (int)Const.UrlType.Playlist:
+                                    await HandleDownload(new PlaylistDownloaderService(), text);
+                                    cts.Cancel();
+                                    await loadingTask;
+                                    break;
+                                case (int)Const.UrlType.VideoWithPlaylist:
+                                    cts.Cancel();
+                                    await loadingTask;
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
-
-                        AddClipboardFormatListener(this.Handle);
-                        Console.WriteLine("Process is finished");
+                        catch(Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                        finally
+                        {
+                            AddClipboardFormatListener(this.Handle);
+                            cts = new CancellationTokenSource();
+                            Console.WriteLine("Process is finished");
+                        }
                     });
 
                 }

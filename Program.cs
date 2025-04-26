@@ -1,4 +1,5 @@
-﻿using ClipboardUrl.Utils;
+﻿using ClipboardUrl.Models;
+using ClipboardUrl.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Xabe.FFmpeg;
 using YoutubeExplode;
 using YoutubeExplode.Common;
 
@@ -35,6 +37,9 @@ namespace ClipboardUrl
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            DirectoryService.CheckDirectory();
+            FFmpeg.SetExecutablesPath(Const.ffmpegPath);
 
             _window = new MessageWindow();
             Application.Run(); // Message loop to receive WM_CLIPBOARDUPDATE
