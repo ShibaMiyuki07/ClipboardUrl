@@ -12,21 +12,37 @@ namespace ClipboardUrl.Models
 {
     public class DownloadFile
     {
-        public string Author { get; set; } = string.Empty;
+        public string[] Author { get; set; }
 
         public string Title {  get; set; } = string.Empty;
 
-        public static DownloadFile initializeDownloadFile(Video video)
+        private static readonly string[] ArtistsSeparators = new string[] { "&", "feat.", "feat", "ft.", " ft ", "Feat.", " x ", " X " };
+
+        public static DownloadFile InitializeDownloadFile(Video video)
         {
             DownloadFile downloadFile = new DownloadFile();
-            downloadFile.Title = string.Join("", video.Title.Split(Path.GetInvalidPathChars()));
-            downloadFile.Author = video.Author.ChannelTitle;
-            string[] titleSplit = video.Title.Split('-');
-            if (titleSplit.Length > 0) { 
-                downloadFile.Author = titleSplit[0];
-                downloadFile.Title = string.Join("", titleSplit[1].Split(Path.GetInvalidPathChars()));
+            var index = video.Title.LastIndexOf('-');
+
+            if (index > 0)
+            {
+                downloadFile.Title = video.Title.Substring(index + 1).Trim(' ', '-');
+
+                if (string.IsNullOrWhiteSpace(downloadFile.Title))
+                {
+                    index = video.Title.IndexOf('-');
+
+                    if (index > 0)
+                    {
+                        downloadFile.Title = video.Title.Substring(index + 1).Trim(' ', '-');
+                    }
+                }
+
+                downloadFile.Author = video.Title.Substring(0, index - 1).Trim().Split(ArtistsSeparators, StringSplitOptions.RemoveEmptyEntries);
+
             }
             return downloadFile;
         }
+
+
     }
 }
