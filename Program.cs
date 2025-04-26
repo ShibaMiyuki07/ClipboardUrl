@@ -38,7 +38,7 @@ namespace ClipboardUrl
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            DirectoryService.CheckDirectory();
+            DirectoryService.CheckDirectory(Const.path);
             FFmpeg.SetExecutablesPath(Const.ffmpegPath);
 
             _window = new MessageWindow();

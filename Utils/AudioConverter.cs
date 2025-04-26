@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,23 +14,27 @@ namespace ClipboardUrl.Utils
     {
         public static async Task ConvertAudioToMp3(string audioFullPath,DownloadFile downloadFile)
         {
-            Console.WriteLine("Processing mp3 conversion");
-            string parameter = $"-i \"{audioFullPath}\" -movflags use_metadata_tags -map_metadata 0 -metadata title=\"{downloadFile.Title}\" -metadata artist=\"{String.Join(",",downloadFile.Author)}\" \"{audioFullPath.Replace("webm", "mp3")}\"";
             try
             {
+                string parameter = InitializeParameter(audioFullPath, downloadFile);
+
+
                 IConversion conversion = FFmpeg.Conversions.New();
-                conversion.OnProgress += (sender, args) =>
-                {
-                    var percent = (int)(Math.Round(args.Duration.TotalSeconds / args.TotalLength.TotalSeconds, 2) * 100);
-                    Console.WriteLine($"[{args.Duration} / {args.TotalLength}] {percent}%");
-                };
                 await conversion.Start(parameter);
-                Console.WriteLine("Mp3 conversion finished");
+                FileService.DeleteFile(downloadFile.CoverPath);
+                FileService.DeleteFile(audioFullPath);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
+        }
+
+        private static string InitializeParameter(string audioFullPath,DownloadFile downloadFile)
+        {
+            string extensions = audioFullPath.Split('.')[audioFullPath.Split('.').Length - 1];
+            string parameter = $"-i \"{audioFullPath}\" -i \"{downloadFile.CoverPath}\" -map 0:a -map 1:v -c:v mjpeg -id3v2_version 3  -movflags use_metadata_tags -map_metadata 0 -metadata title=\"{(!string.IsNullOrEmpty(downloadFile.Title) ? downloadFile.Title : "")}\" -metadata artist=\"{(downloadFile.Author.Length > 0 ? string.Join(",", downloadFile.Author) : "")}\" \"{audioFullPath.Replace(extensions, "mp3")}\"";
+            return parameter;
         }
     }
 }

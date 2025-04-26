@@ -10,10 +10,10 @@ namespace ClipboardUrl.Utils
 {
     class DirectoryService
     {
-        public static void CheckDirectory()
+        public static void CheckDirectory(string path)
         {
-            if (!Directory.Exists(Const.path))
-                Directory.CreateDirectory(Const.path);
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
         }
     }
 }

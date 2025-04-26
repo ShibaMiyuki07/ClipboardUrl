@@ -116,16 +116,19 @@ namespace ClipboardUrl.Utils
                                     await loadingTask;
                                     break;
                                 default:
+                                    
                                     break;
                             }
                         }
                         catch(Exception e)
                         {
-                            Console.WriteLine(e.Message);
+                            
                         }
                         finally
                         {
                             AddClipboardFormatListener(this.Handle);
+                            cts.Cancel();
+                            await loadingTask;
                             cts = new CancellationTokenSource();
                             Console.WriteLine("Process is finished");
                         }

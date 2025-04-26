@@ -109,6 +109,8 @@
     <Compile Include="Services\VideoDownloaderService.cs" />
     <Compile Include="Utils\AudioConverter.cs" />
     <Compile Include="Utils\DirectoryService.cs" />
+    <Compile Include="Utils\FileService.cs" />
+    <Compile Include="Utils\ProgressTask.cs" />
     <Compile Include="Utils\VideoInfo.cs" />
     <Compile Include="Utils\Window.cs" />
   </ItemGroup>
@@ -150,7 +152,6 @@
     <Content Include="ffmpeg\bin\swscale-9.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="ffmpeg\LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

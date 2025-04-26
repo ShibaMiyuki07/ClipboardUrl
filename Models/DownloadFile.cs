@@ -6,43 +6,66 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using YoutubeExplode.Videos;
 
 namespace ClipboardUrl.Models
 {
     public class DownloadFile
     {
-        public string[] Author { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string[] Author { get; set; } = new string[] { };
+
+        public string FilePath { get; set; } = string.Empty;
+        public string FullTitle { get; set; } = string.Empty;
 
         public string Title {  get; set; } = string.Empty;
 
+        public string CoverPath { get; set; } = string.Empty;
+
+        public string Album { get; set; } = string.Empty;
+
         private static readonly string[] ArtistsSeparators = new string[] { "&", "feat.", "feat", "ft.", " ft ", "Feat.", " x ", " X " };
 
-        public static DownloadFile InitializeDownloadFile(Video video)
+        public static DownloadFile InitializeDownloadFile(Video video,string path)
         {
-            DownloadFile downloadFile = new DownloadFile();
-            var index = video.Title.LastIndexOf('-');
-
-            if (index > 0)
+            DownloadFile downloadFile = new DownloadFile
             {
-                downloadFile.Title = video.Title.Substring(index + 1).Trim(' ', '-');
-
-                if (string.IsNullOrWhiteSpace(downloadFile.Title))
-                {
-                    index = video.Title.IndexOf('-');
-
-                    if (index > 0)
-                    {
-                        downloadFile.Title = video.Title.Substring(index + 1).Trim(' ', '-');
-                    }
-                }
-
-                downloadFile.Author = video.Title.Substring(0, index - 1).Trim().Split(ArtistsSeparators, StringSplitOptions.RemoveEmptyEntries);
-
-            }
+                Id = video.Id,
+                FullTitle = string.Join("", video.Title.Split(Path.GetInvalidFileNameChars())),
+                FilePath = path,
+                CoverPath = Path.Combine(path, video.Id + "_cover.jpg")
+            };
+            (downloadFile.Author,downloadFile.Title) = getAuthorAndTitleFromVideo(video);
             return downloadFile;
         }
 
+        #region Private methods
 
+        private static (string[],string) getAuthorAndTitleFromVideo(Video video)
+        {
+            string[] authors = new string[] { };
+            string title = string.Empty;
+            var index = video.Title.LastIndexOf('-');
+            if (index > 0)
+            {
+                title = video.Title.Substring(index + 1).Trim(' ', '-');
+
+                if (string.IsNullOrWhiteSpace(title))
+                {
+                    index = video.Title.IndexOf('-');
+                    if (index > 0)
+                    {
+                        title = video.Title.Substring(index + 1).Trim(' ', '-');
+                    }
+                }
+
+                authors = video.Title.Substring(0, index - 1).Trim().Split(ArtistsSeparators, StringSplitOptions.RemoveEmptyEntries);
+
+            }
+            return (authors,title);
+        }
+
+        #endregion
     }
 }
