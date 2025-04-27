@@ -17,39 +17,54 @@ namespace ClipboardUrl.Utils
     {
         public async Task Download(string url)
         {
-            //Get all the playlist data
-            var playlist = await Const.youtubeClient.Playlists.GetAsync(url);
-            var playlistVideos = await Const.youtubeClient.Playlists.GetVideosAsync(url);
+            try
+            {
+                //Get all the playlist data
+                var playlist = await Const.youtubeClient.Playlists.GetAsync(url);
+                var playlistVideos = await Const.youtubeClient.Playlists.GetVideosAsync(url);
 
-            var directory = Path.Combine(Const.path, string.Join("", playlist.Title.Split(Path.GetInvalidFileNameChars())));
-            DirectoryService.CheckDirectory(directory);
+                var directory = Path.Combine(Const.path, string.Join("", playlist.Title.Split(Path.GetInvalidFileNameChars())));
+                DirectoryService.CheckDirectory(directory);
 
-            await LaunchTheDownload(playlistVideos, directory);
+                await LaunchTheDownload(playlistVideos, directory);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+            }
         }
 
         #region Private Method
         private async Task LaunchTheDownload(IReadOnlyList<PlaylistVideo> playlistVideos,string directory)
         {
-            List<Task> tasksDownloadAndConvert = new List<Task>();
-            var semaphore = new SemaphoreSlim(5);
-            foreach (var list in playlistVideos)
+            try
             {
-                try
+                List<Task> tasksDownloadAndConvert = new List<Task>();
+                foreach (var list in playlistVideos)
                 {
-                    tasksDownloadAndConvert.Add(DownloadAndConvert(directory, list,semaphore));
+                    try
+                    {
+                        tasksDownloadAndConvert.Add(DownloadAndConvert(directory, list));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                        Console.WriteLine(e.StackTrace);
+                    }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
+                await Task.WhenAll(tasksDownloadAndConvert);
             }
-            await Task.WhenAll(tasksDownloadAndConvert);
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+            }
 
         }
 
-        private async Task DownloadAndConvert(string directory,PlaylistVideo list,SemaphoreSlim semaphore)
+        private async Task DownloadAndConvert(string directory,PlaylistVideo list)
         {
-            await semaphore.WaitAsync();
             try
             {
                 (var audioFullPath, var audio, var downloadFile) = await PrepareDownloadAndConvert(list, directory);
@@ -60,10 +75,7 @@ namespace ClipboardUrl.Utils
             catch(Exception e)
             {
                 Console.WriteLine(e.Message);
-            }
-            finally
-            {
-                semaphore.Release();
+                Console.WriteLine(e.StackTrace);
             }
         }
 

@@ -16,8 +16,6 @@ namespace ClipboardUrl.Utils
 {
     class MessageWindow : NativeWindow
     {
-        
-        CancellationTokenSource cts = new CancellationTokenSource();
 
         private const int WM_CLIPBOARDUPDATE = 0x031D;
 
@@ -56,26 +54,6 @@ namespace ClipboardUrl.Utils
         }
         #endregion
 
-        #region Loading
-        static async Task ShowLoadingAsync(string message, CancellationToken token)
-        {
-            char[] spinner = new[] { '|', '/', '-', '\\' };
-            int counter = 0;
-
-            Console.Write(message + " ");
-
-            while (!token.IsCancellationRequested)
-            {
-                Console.Write(spinner[counter % spinner.Length]);
-                await Task.Delay(100);
-                Console.Write("\b");
-                counter++;
-            }
-
-            Console.WriteLine("✔");
-        }
-        #endregion
-
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WM_CLIPBOARDUPDATE)
@@ -83,8 +61,6 @@ namespace ClipboardUrl.Utils
                 if (Clipboard.ContainsText())
                 {
                     Console.WriteLine("Wait until process is finished to copy again");
-                    var loadingTask = ShowLoadingAsync("🔍 Fetching...", cts.Token);
-                    RemoveClipboardFormatListener(this.Handle);
                     string text = Clipboard.GetText();
 
                     /* 
@@ -94,7 +70,7 @@ namespace ClipboardUrl.Utils
                         // 3 = video with playlist 
                     */
                     int urlType = VideoType(text);
-                    Task.Run(async () =>
+                    Task task = new Task(async () =>
                     {
                         try
                         {
@@ -102,38 +78,28 @@ namespace ClipboardUrl.Utils
                             {
                                 case (int)Const.UrlType.Video:
                                     await HandleDownload(new VideoDownloaderService(), text);
-                                    cts.Cancel();
-                                    await loadingTask;
                                     break;
                                 case (int)Const.UrlType.Playlist:
                                     await HandleDownload(new PlaylistDownloaderService(), text);
-                                    cts.Cancel();
-                                    await loadingTask;
                                     break;
                                 case (int)Const.UrlType.VideoWithPlaylist:
                                     await HandleDownload(new PlaylistDownloaderService(), text);
-                                    cts.Cancel();
-                                    await loadingTask;
                                     break;
                                 default:
-                                    
                                     break;
                             }
                         }
-                        catch(Exception)
+                        catch (Exception e)
                         {
-                            
+                            Console.WriteLine(e.Message);
+                            Console.WriteLine(e.StackTrace);
                         }
                         finally
                         {
-                            AddClipboardFormatListener(this.Handle);
-                            cts.Cancel();
-                            await loadingTask;
-                            cts = new CancellationTokenSource();
                             Console.WriteLine("Process is finished");
                         }
                     });
-
+                    task.Start();
                 }
             }
 

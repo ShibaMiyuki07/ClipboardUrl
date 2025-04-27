@@ -36,13 +36,13 @@ namespace ClipboardUrl.Models
                 FilePath = path,
                 CoverPath = Path.Combine(path, video.Id + "_cover.jpg")
             };
-            (downloadFile.Author,downloadFile.Title) = getAuthorAndTitleFromVideo(video);
+            (downloadFile.Author,downloadFile.Title) = GetAuthorAndTitleFromVideo(video);
             return downloadFile;
         }
 
         #region Private methods
 
-        private static (string[],string) getAuthorAndTitleFromVideo(Video video)
+        private static (string[],string) GetAuthorAndTitleFromVideo(Video video)
         {
             string[] authors = new string[] { };
             string title = string.Empty;
