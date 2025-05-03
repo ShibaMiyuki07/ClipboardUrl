@@ -17,66 +17,34 @@ namespace ClipboardUrl.Utils
     {
         public async Task Download(string url)
         {
-            try
-            {
-                //Get all the playlist data
-                var playlist = await Const.youtubeClient.Playlists.GetAsync(url);
-                var playlistVideos = await Const.youtubeClient.Playlists.GetVideosAsync(url);
+            //Get all the playlist data
+            var playlist = await Const.youtubeClient.Playlists.GetAsync(url);
+            var playlistVideos = await Const.youtubeClient.Playlists.GetVideosAsync(url);
 
-                var directory = Path.Combine(Const.path, string.Join("", playlist.Title.Split(Path.GetInvalidFileNameChars())));
-                DirectoryService.CheckDirectory(directory);
+            var directory = Path.Combine(Const.path, string.Join("", playlist.Title.Split(Path.GetInvalidFileNameChars())));
+            DirectoryService.CheckDirectory(directory);
 
-                await LaunchTheDownload(playlistVideos, directory);
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
-            }
+            await LaunchTheDownload(playlistVideos, directory);
         }
 
         #region Private Method
         private async Task LaunchTheDownload(IReadOnlyList<PlaylistVideo> playlistVideos,string directory)
         {
-            try
+            List<Task> tasksDownloadAndConvert = new List<Task>();
+            foreach (var list in playlistVideos)
             {
-                List<Task> tasksDownloadAndConvert = new List<Task>();
-                foreach (var list in playlistVideos)
-                {
-                    try
-                    {
-                        tasksDownloadAndConvert.Add(DownloadAndConvert(directory, list));
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                        Console.WriteLine(e.StackTrace);
-                    }
-                }
-                await Task.WhenAll(tasksDownloadAndConvert);
+                    tasksDownloadAndConvert.Add(DownloadAndConvert(directory, list));
             }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
-            }
-
+            await Task.WhenAll(tasksDownloadAndConvert);
         }
 
         private async Task DownloadAndConvert(string directory,PlaylistVideo list)
         {
-            try
-            {
-                (var audioFullPath, var audio, var downloadFile) = await PrepareDownloadAndConvert(list, directory);
-                await VideoDownloaderService.GetCover(downloadFile, directory);
-                await VideoDownloaderService.DownloadAudio(audioFullPath, audio);
-                await AudioConverter.ConvertAudioToMp3(audioFullPath, downloadFile);
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
-            }
+            await Task.Delay(TimeSpan.FromMilliseconds(new Random().Next(100, 500)));
+            (var audioFullPath, var audio, var downloadFile) = await PrepareDownloadAndConvert(list, directory);
+            await VideoDownloaderService.GetCover(downloadFile, directory);
+            await VideoDownloaderService.DownloadAudio(audioFullPath, audio);
+            await AudioConverter.ConvertAudioToMp3(audioFullPath, downloadFile);
         }
 
         private async Task<(string, IStreamInfo, DownloadFile)> PrepareDownloadAndConvert(PlaylistVideo list,string directory)
